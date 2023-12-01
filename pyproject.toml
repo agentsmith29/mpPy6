@@ -4,7 +4,7 @@ version = "0.0.1"
 authors = [
   { name="Christoph Schmidt", email="cschmidt.fs@gmail.com" },
 ]
-description = "A Pyside-to-Process Controll class"
+description = "A Pyside-to-Process Control lass"
 readme = "README.md"
 requires-python = ">=3.7"
 dependencies = [
