@@ -10,7 +10,10 @@ class ChildProcessControl2(cmp.CProcessControl):
 
     def __init__(self, parent, signal_class, enable_internal_logging):
         super().__init__(parent, signal_class, enable_internal_logging=enable_internal_logging)
-        self.register_child_process(ChildProcess2(self.state_queue, self.cmd_queue, enable_interal_logging=enable_internal_logging))
+        self.register_child_process(ChildProcess2(
+            self.state_queue,
+            self.cmd_queue,
+            enable_internal_logging=enable_internal_logging))
 
     @cmp.CProcessControl.register_function()
     def call_without_mp(self, a, b, c=None):

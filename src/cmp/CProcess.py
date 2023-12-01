@@ -10,7 +10,7 @@ import cmp
 
 class CProcess(Process):
 
-    def __init__(self, state_queue: Queue, cmd_queue: Queue, enable_internal_logging=True):
+    def __init__(self, state_queue: Queue, cmd_queue: Queue, enable_internal_logging: bool = False):
         Process.__init__(self)
 
         self._enable_internal_logging = enable_internal_logging
@@ -22,7 +22,7 @@ class CProcess(Process):
 
         self.cmd_queue = cmd_queue
         self.state_queue = state_queue
-        self._kill_flag = Value('i', 1)
+        self._kill_flag = Value('i', 0)
 
     def register_kill_flag(self, kill_flag: Value):
         self._kill_flag = kill_flag
@@ -60,6 +60,8 @@ class CProcess(Process):
         self._internal_logger, self._il_handler = self.create_new_logger(f"{self.__class__.__name__}-Int({os.getpid()})")
         self.logger, self.logger_handler = self.create_new_logger(f"{self.__class__.__name__}({os.getpid()})")
         self.enable_internal_logging(self._enable_internal_logging)
+        self._internal_logger.debug(f"Child process {self.__class__.__name__} started.")
+
         try:
             while self._kill_flag.value:
                 try:
@@ -86,6 +88,8 @@ class CProcess(Process):
                     #    self._internal_logger.info(f"Executing {cmd} in Process Class.\n")
                     #    getattr(self, cmd.func_name)(*cmd.args, **cmd.kwargs)
             self._internal_logger.error(f"Control Process exited. Terminating Process {os.getpid()}")
+            if self._kill_flag.value == 0:
+                self._internal_logger.error(f"Process {os.getpid()} received kill signal!")
 
         except KeyboardInterrupt:
             self._internal_logger.warning(f"Received KeyboardInterrupt! Exiting Process {os.getpid()}")

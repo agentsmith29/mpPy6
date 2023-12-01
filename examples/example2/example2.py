@@ -30,7 +30,7 @@ class Form(QDialog):
         super().__init__(parent)
 
         mysignals = MySignals()
-        child_con = ChildProcessControl2(self, mysignals, enable_internal_logging=False)
+        child_con = ChildProcessControl2(self, mysignals, enable_internal_logging=True)
 
         mysignals.call_without_mp2_changed.connect(self.updateUI)
 
@@ -50,7 +50,9 @@ class Form(QDialog):
         print("updateUI: ", text)
         self.browser.append("->" + str(text) + "+" + str(text2) + "=" + str(text3))
 
-
+    def closeEvent(self, arg__1):
+        self.destroyed.emit()
+        print("Form destroyed.")
 if __name__ == '__main__':
 
     try:

@@ -15,16 +15,15 @@ import cmp
 
 class CProcessControl(QObject):
 
-    def __init__(self, kill_child_process_flag: Value,
-                 parent: QObject = None,
+    def __init__(self, parent: QObject = None,
                  signal_class: QObject = None,
                  enable_internal_logging: bool = False):
         super().__init__(parent)
-        self._kill_child_process_flag = kill_child_process_flag
+        #self._kill_child_process_flag = kill_child_process_flag
         self._enable_internal_logging = enable_internal_logging
-
-        if parent is not None:
-            parent.destroyed.connect(self.safe_exit)
+        print(f"Parent: {type(parent)}")
+        if isinstance(parent, QWidget) or isinstance(parent, QWindow):
+            parent.destroyed.connect(lambda: self.safe_exit(reason="Parent destroyed."))
 
         # Register this class as signal class (all signals will be implemented and emitted from this class)
         if signal_class is not None:
@@ -73,6 +72,7 @@ class CProcessControl(QObject):
         return self._child_process_pid
 
     def register_child_process(self, child: cmp.CProcess):
+        self._internal_logger.debug(f"Registering child process {child.__class__.__name__}.")
         self._child = child
         self._child.register_kill_flag(self._child_kill_flag)
         self._child_process_pid = child.pid
@@ -120,11 +120,16 @@ class CProcessControl(QObject):
                 name = getattr(func, '__name__', 'unknown')
                 cmd = cmp.CCommandRecord(name, *args, **kwargs)
                 func(self, *args, **kwargs)
-                self.cmd_queue.put(cmd)
+                try:
+                    self.cmd_queue.put(cmd)
+                except Exception as e:
+                    self._internal_logger.error(f"Error while putting {cmd} into cmd_queue: {e}")
+                    raise e
+
             return get_signature
         return register
-    def safe_exit(self):
-        self._internal_logger.warning(f"Shutting down ProcessControl {os.getpid()}")
+    def safe_exit(self, reason: str = ""):
+        self._internal_logger.warning(f"Shutting down ProcessControl {os.getpid()}. Reason: {reason}")
         self._child_kill_flag.value = 0
 
     def __del__(self):
