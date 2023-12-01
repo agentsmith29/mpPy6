@@ -1,4 +1,4 @@
-# cmp
+# PySide Multiprocessing
 
 
 
@@ -15,14 +15,14 @@ Already a pro? Just edit this README.md and make it your own. Want to make it ea
 
 ```
 cd existing_repo
-git remote add origin https://gitlab.tugraz.at/flexsensor-public/modules/cmp.git
+git remote add origin https://gitlab.tugraz.at/flexsensor/pyside-multiprocessing.git
 git branch -M main
 git push -uf origin main
 ```
 
 ## Integrate with your tools
 
-- [ ] [Set up project integrations](https://gitlab.tugraz.at/flexsensor-public/modules/cmp/-/settings/integrations)
+- [ ] [Set up project integrations](https://gitlab.tugraz.at/flexsensor/pyside-multiprocessing/-/settings/integrations)
 
 ## Collaborate with your team
 
