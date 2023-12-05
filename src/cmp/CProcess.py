@@ -70,23 +70,13 @@ class CProcess(Process):
                     continue
                 if isinstance(cmd, cmp.CCommandRecord):
                     self._internal_logger.info(f"Received cmd: {cmd}")
-                    # print(f"Received cmd with args: {cmd_with_args}")
-                    # cmd = cmd_with_args['func']
-                    # args = cmd_with_args['args']
-                    # kwargs = cmd_with_args['kwargs']
-                    # if 'sig_name' is not None:
-                    #    #sig_name = cmd_with_args['sig_name']
                     self._internal_logger.debug(
-                        f"cmd: {cmd}, args: {cmd.args}, kwargs: {cmd.kwargs}, sig_name: {cmd.signal_name}")
+                        f"cmd: {cmd}, args: {cmd.args}, kwargs: {cmd.kwargs}, Signal to emit: {cmd.signal_name}")
                     try:
                         cmd.execute(self)
                     except Exception as e:
                         traceback_str = ''.join(traceback.format_tb(e.__traceback__))
                         self._internal_logger.error(f"Exception '{e}' occurred in {cmd}!. Traceback:\n{traceback_str}")
-                    # else:
-                    #    self._internal_logger.debug(f"cmd: {cmd}, args: {cmd.args}, kwargs: {cmd.kwargs}")
-                    #    self._internal_logger.info(f"Executing {cmd} in Process Class.\n")
-                    #    getattr(self, cmd.func_name)(*cmd.args, **cmd.kwargs)
             self._internal_logger.error(f"Control Process exited. Terminating Process {os.getpid()}")
             if self._kill_flag.value == 0:
                 self._internal_logger.error(f"Process {os.getpid()} received kill signal!")
@@ -106,21 +96,21 @@ class CProcess(Process):
 
     @staticmethod
     def register_for_signal(postfix='_finished'):
+        _postfix = postfix.strip() if postfix is not None else None
         def register(func):
             def get_signature(self, *args, **kwargs):
-                res = func(self, *args, **kwargs)
-
-                # arguments = locals().copy()
-                # print(f"arguments: {arguments}")
-                # if 'sig_name' in arguments:
-                if 'sig_name' in kwargs and kwargs['sig_name'] is None:
-                    sign = kwargs['sig_name']
+                if 'signal_name' in kwargs and kwargs['signal_name'] is not None:
+                    sign = kwargs.pop('signal_name')
+                elif _postfix is not None:
+                    sign = f"{func.__name__}{_postfix}"
+                    self._internal_logger.debug(f"Constructing signal name for function '{func.__name__}': {sign}")
                 else:
-                    sign = f"{func.__name__}{postfix}"
+                    raise ValueError(f"Cannot register function '{func.__name__}' for signal. No signal name provided!")
+                res = func(self, *args, **kwargs)
+                self._internal_logger.debug(f"{func.__name__} finished. Emitting signal {sign} in control class.")
                 result = cmp.CResultRecord(sign, res)
                 self.state_queue.put(result)
                 return res
 
             return get_signature
-
         return register

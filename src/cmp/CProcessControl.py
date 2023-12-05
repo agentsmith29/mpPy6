@@ -1,11 +1,12 @@
 import logging
 import logging.handlers
 import os
+import re
 import signal
 import time
 from multiprocessing import Queue, Process, Value
 
-from PySide6.QtCore import QObject, QThreadPool
+from PySide6.QtCore import QObject, QThreadPool, Signal
 from PySide6.QtGui import QWindow
 from PySide6.QtWidgets import QWidget
 from rich.logging import RichHandler
@@ -19,7 +20,7 @@ class CProcessControl(QObject):
                  signal_class: QObject = None,
                  enable_internal_logging: bool = False):
         super().__init__(parent)
-        #self._kill_child_process_flag = kill_child_process_flag
+        # self._kill_child_process_flag = kill_child_process_flag
         self._enable_internal_logging = enable_internal_logging
         print(f"Parent: {type(parent)}")
         if isinstance(parent, QWidget) or isinstance(parent, QWindow):
@@ -30,7 +31,6 @@ class CProcessControl(QObject):
             self.register_signal_class(signal_class)
         else:
             self.register_signal_class(self)
-
 
         # The child process
         self._child: Process = None
@@ -45,7 +45,8 @@ class CProcessControl(QObject):
         self._child_process_pid = None
         self._child_kill_flag = Value('i', 1)
 
-        self._internal_logger, self._il_handler = self.create_new_logger(f"{self.__class__.__name__}-Int({os.getpid()})")
+        self._internal_logger, self._il_handler = self.create_new_logger(
+            f"{self.__class__.__name__}-Int({os.getpid()})")
         self.logger, self.logger_handler = self.create_new_logger(f"{self.__class__.__name__}({os.getpid()})")
         self.enable_internal_logging(enable_internal_logging)
 
@@ -109,25 +110,51 @@ class CProcessControl(QObject):
         self.cmd_queue.close()
 
     @staticmethod
-    def register_function(signal_name: str = None):
+    def register_function(signal: Signal = None):
+        """
+        Decorator for registering functions in the command queue.
+        This automatically puts the command into the queue and executes the function.
+        If a signal_name is specified, the given Signal name will be emitted after the function has been executed.
+        :param signal:
+        :return:
+        """
         def register(func):
+            def match_signal_name(_signal: Signal):
+                pattern = re.compile(r'(\w+)\(([^)]*)\)')
+                match = pattern.match(str(_signal))
+                name = match.group(1).strip()
+                args = match.group(2).split(',')
+                return name, args
+
             def get_signature(self: CProcessControl, *args, **kwargs):
+
                 arguments = locals().copy()
                 arguments.pop("func")
 
+                name = getattr(func, '__name__', 'unknown')
                 args = arguments.pop("args")
                 kwargs = arguments.pop("kwargs")
-                name = getattr(func, '__name__', 'unknown')
+
                 cmd = cmp.CCommandRecord(name, *args, **kwargs)
-                func(self, *args, **kwargs)
+                if signal is not None:
+                    sig_name, args = match_signal_name(signal)
+                    cmd.register_signal(sig_name)
+                else:
+                    func(self, *args, **kwargs)
+
                 try:
+                    self._internal_logger.debug(f"New function registered: {cmd} -> "
+                                                f"{cmd.signal_name if cmd.signal_name is not None else 'None'}("
+                                                f"{', '.join(a for a in args) if args is not None else 'None'})")
                     self.cmd_queue.put(cmd)
                 except Exception as e:
                     self._internal_logger.error(f"Error while putting {cmd} into cmd_queue: {e}")
                     raise e
 
             return get_signature
+
         return register
+
     def safe_exit(self, reason: str = ""):
         self._internal_logger.warning(f"Shutting down ProcessControl {os.getpid()}. Reason: {reason}")
         self._child_kill_flag.value = 0

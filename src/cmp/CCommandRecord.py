@@ -9,12 +9,13 @@ class CCommandRecord:
 
         self.signal_name: str = None
 
-    def _register_signal(self, signal_name: str):
+    def register_signal(self, signal_name: str):
         self.signal_name: str = signal_name
 
     def execute(self, class_object: CProcess):
-        class_object._internal_logger.info(f"Executing {self} in {class_object.name}.\n")
-        getattr(class_object, self.func_name)(*self.args, **self.kwargs)
+        if hasattr(class_object, '_internal_logger'):
+            class_object._internal_logger.info(f"Executing {self} in {class_object.name}.")
+        getattr(class_object, self.func_name)(signal_name=self.signal_name, *self.args, **self.kwargs)
 
     def __repr__(self):
         args_str = ', '.join(map(repr, self.args))
