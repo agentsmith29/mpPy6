@@ -47,9 +47,9 @@ class ChildControl(cmp.CProcessControl, Sceleton):
     call_without_mp_finished = Signal(int)
     call_without_mp2_changed = Signal(int, int, int)
 
-    def __init__(self, parent, enable_internal_logging):
-        super().__init__(parent, enable_internal_logging=enable_internal_logging)
-        self.register_child_process(ChildProc(self.state_queue, self.cmd_queue, enable_interal_logging=enable_internal_logging))
+    def __init__(self, parent, internal_logging):
+        super().__init__(parent, internal_logging=internal_logging)
+        self.register_child_process(ChildProc(self.state_queue, self.cmd_queue, enable_interal_logging=internal_logging))
 
     @cmp.CProcessControl.register_function()
     def call_without_mp(self, a, b, c=None):

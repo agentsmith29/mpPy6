@@ -6,8 +6,10 @@ import cmp
 
 class ChildProcess2(cmp.CProcess):
 
-    def __init__(self, state_queue, cmd_queue, enable_internal_logging):
-        super().__init__(state_queue, cmd_queue, enable_internal_logging=enable_internal_logging)
+    def __init__(self, state_queue, cmd_queue, kill_flag, internal_logging, internal_log_level):
+        super().__init__(state_queue, cmd_queue, kill_flag,
+                         internal_logging=internal_logging,
+                         internal_log_level=internal_log_level)
         self.logger = None
 
     def postrun_init(self):

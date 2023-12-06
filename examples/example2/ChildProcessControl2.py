@@ -8,12 +8,10 @@ class ChildProcessControl2(cmp.CProcessControl):
     call_without_mp_finished = Signal(int)
     #call_without_mp2_changed = Signal(int, int, int)
 
-    def __init__(self, parent, signal_class, enable_internal_logging):
-        super().__init__(parent, signal_class, enable_internal_logging=enable_internal_logging)
-        self.register_child_process(ChildProcess2(
-            self.state_queue,
-            self.cmd_queue,
-            enable_internal_logging=enable_internal_logging))
+    def __init__(self, parent, signal_class, internal_logging, internal_logging_level):
+        super().__init__(parent, signal_class,
+                         internal_logging=internal_logging, internal_logging_level=internal_logging_level)
+        self.register_child_process(ChildProcess2)
 
     @cmp.CProcessControl.register_function()
     def call_without_mp(self, a, b, c=None):

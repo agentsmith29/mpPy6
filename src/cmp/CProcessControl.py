@@ -5,6 +5,7 @@ import re
 import signal
 import time
 from multiprocessing import Queue, Process, Value
+from typing import Type
 
 from PySide6.QtCore import QObject, QThreadPool, Signal
 from PySide6.QtGui import QWindow
@@ -18,22 +19,24 @@ class CProcessControl(QObject):
 
     def __init__(self, parent: QObject = None,
                  signal_class: QObject = None,
-                 enable_internal_logging: bool = False):
+                 internal_logging: bool = False,
+                 internal_logging_level: int = logging.DEBUG):
         super().__init__(parent)
         # self._kill_child_process_flag = kill_child_process_flag
-        self._enable_internal_logging = enable_internal_logging
-        print(f"Parent: {type(parent)}")
+
+
         if isinstance(parent, QWidget) or isinstance(parent, QWindow):
             parent.destroyed.connect(lambda: self.safe_exit(reason="Parent destroyed."))
 
-        # Register this class as signal class (all signals will be implemented and emitted from this class)
+        # Register this class as signal class (all signals will be implemented in and emitted from this class)
         if signal_class is not None:
             self.register_signal_class(signal_class)
         else:
             self.register_signal_class(self)
 
         # The child process
-        self._child: Process = None
+        self._child: cmp.CProcess = None
+
         # Queues for data exchange
         self.cmd_queue = Queue()
         self.state_queue = Queue()
@@ -42,14 +45,23 @@ class CProcessControl(QObject):
         self.thread_manager = QThreadPool()
 
         # The child process pid
+        self._pid = os.getpid()
         self._child_process_pid = None
+
+        self.name = f"{self._pid}({self.__class__.__name__})"
+
         self._child_kill_flag = Value('i', 1)
 
-        self._internal_logger, self._il_handler = self.create_new_logger(
-            f"{self.__class__.__name__}-Int({os.getpid()})")
-        self.logger, self.logger_handler = self.create_new_logger(f"{self.__class__.__name__}({os.getpid()})")
-        self.enable_internal_logging(enable_internal_logging)
+        self._internal_logger, self._il_handler = self.create_new_logger(f"(cmp) {self.name}")
+        self.enable_internal_logging = internal_logging
+        self.internal_logging_level = internal_logging_level
 
+        self.logger, self.logger_handler = self.create_new_logger(f"{self.__class__.__name__}({os.getpid()})")
+
+
+    # ==================================================================================================================
+    # Public methods
+    # ==================================================================================================================
     def create_new_logger(self, name: str) -> (logging.Logger, logging.Handler):
         qh = RichHandler(rich_tracebacks=True)
         _internal_logger = logging.getLogger(name)
@@ -60,11 +72,34 @@ class CProcessControl(QObject):
         qh.setFormatter(formatter)
         return _internal_logger, qh
 
-    def enable_internal_logging(self, enable: bool):
-        self._enable_internal_logging = enable
-        if self._internal_logger is not None:
-            self._internal_logger.disabled = not enable
+    @property
+    def internal_log_enabled(self):
+        return not self._internal_logger.disabled
 
+    @internal_log_enabled.setter
+    def internal_log_enabled(self, enable: bool) -> None:
+        """
+        Enables or disables internal logging. If disabled, the internal logger will be disabled and no messages will be
+        emitted to the state queue.
+        :param enable: True to enable, False to disable
+        """
+        self._internal_logger.disabled = not enable
+
+    @property
+    def internal_logging_level(self):
+        return self._internal_logger.level
+
+    @internal_logging_level.setter
+    def internal_logging_level(self, level: int) -> None:
+        """
+        Sets the internal logging level.
+        :param level:
+        :return:
+        """
+        self._internal_logger.setLevel(level)
+    # ==================================================================================================================
+    #
+    # ==================================================================================================================
     def register_signal_class(self, signal_class: QObject):
         self._signal_class = signal_class
 
@@ -72,13 +107,17 @@ class CProcessControl(QObject):
     def child_process_pid(self):
         return self._child_process_pid
 
-    def register_child_process(self, child: cmp.CProcess):
-        self._internal_logger.debug(f"Registering child process {child.__class__.__name__}.")
-        self._child = child
-        self._child.register_kill_flag(self._child_kill_flag)
+    def register_child_process(self, child: Type[cmp.CProcess], *args, **kwargs):
+        self._internal_logger.debug(f"Registering child process.")
+        self._child = child(self.state_queue, self.cmd_queue,
+                            kill_flag=self._child_kill_flag,
+                            internal_logging=self.internal_log_enabled,
+                            internal_log_level=self.internal_logging_level,
+                            *args, **kwargs)
+        #self._child.register_kill_flag(self._child_kill_flag)
         self._child_process_pid = child.pid
-        self._child.enable_internal_logging(self._enable_internal_logging)
         self._child.start()
+        self._internal_logger.debug(f"Child process {self._child.name} created.")
         self.thread_manager.start(self._monitor_result_state)
 
     def _monitor_result_state(self):

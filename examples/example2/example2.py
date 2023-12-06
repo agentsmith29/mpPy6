@@ -4,6 +4,7 @@ Author(s): Christoph Schmidt <christoph.schmidt@tugraz.at>
 Created: 2023-10-19 12:35
 Package Version:
 """
+import logging
 import signal
 import sys
 from multiprocessing import Process, Queue, Pipe
@@ -30,7 +31,7 @@ class Form(QDialog):
         super().__init__(parent)
 
         mysignals = MySignals()
-        child_con = ChildProcessControl2(self, mysignals, enable_internal_logging=True)
+        child_con = ChildProcessControl2(self, mysignals, internal_logging=True, internal_logging_level=logging.DEBUG)
 
         mysignals.call_without_mp2_changed.connect(self.updateUI)
 

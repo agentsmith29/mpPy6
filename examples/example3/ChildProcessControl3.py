@@ -6,13 +6,13 @@ from ChildProcess3 import ChildProcess3
 
 class ChildProcessControl3(cmp.CProcessControl):
     mp_finished = Signal(int, name='mp_finished')
+    mp_finished_untriggered = Signal(int)
 
-    def __init__(self, parent, enable_internal_logging):
-        super().__init__(parent, enable_internal_logging=enable_internal_logging)
-        self.register_child_process(ChildProcess3(
-            self.state_queue,
-            self.cmd_queue,
-            enable_internal_logging=enable_internal_logging))
+    def __init__(self, parent, internal_logging, internal_logging_level):
+        super().__init__(parent,
+                         internal_logging=internal_logging,
+                         internal_logging_level=internal_logging_level)
+        self.register_child_process(ChildProcess3)
 
     @cmp.CProcessControl.register_function(signal=mp_finished)
     def test_call(self, a):

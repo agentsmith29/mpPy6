@@ -10,8 +10,8 @@ import unittest
 
 class ChildProcessCustomSignals(cmp.CProcess):
 
-    def __init__(self, state_queue, cmd_queue, enable_internal_logging):
-        super().__init__(state_queue, cmd_queue, enable_internal_logging=enable_internal_logging)
+    def __init__(self, state_queue, cmd_queue, internal_logging):
+        super().__init__(state_queue, cmd_queue, internal_logging=internal_logging)
         self.logger = None
 
     def postrun_init(self):
@@ -29,10 +29,10 @@ class ChildProcessControlCustomSignals(cmp.CProcessControl):
 
     # call_without_mp2_changed = Signal(int, int, int)
 
-    def __init__(self, parent, signal_class, enable_internal_logging):
-        super().__init__(parent, signal_class, enable_internal_logging=enable_internal_logging)
+    def __init__(self, parent, signal_class, internal_logging):
+        super().__init__(parent, signal_class, internal_logging=internal_logging)
         self.register_child_process(ChildProcessCustomSignals(self.state_queue, self.cmd_queue,
-                                                              enable_internal_logging=enable_internal_logging))
+                                                              internal_logging=internal_logging))
 
     @cmp.CProcessControl.register_function()
     def call_without_mp(self, a, b, c=None):

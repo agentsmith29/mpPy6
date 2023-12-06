@@ -5,13 +5,15 @@ from cmp import CProcessControl as CProcessControl
 
 class CResultRecord:
 
-    def __init__(self, signal_name: str, result):
+    def __init__(self, function_name: str, signal_name: str, result):
+        self.function_name: str = function_name
         self.signal_name: str = signal_name
         self.result = result
 
     def emit_signal(self, class_object: CProcessControl):
         if hasattr(class_object, '_internal_logger'):
-            class_object._internal_logger.info(f"Emitting {self} in {class_object.__class__.__name__}.")
+            class_object._internal_logger.info(f"Function {self.function_name} returned {self.result}. "
+                                               f"Emitting {self} in {class_object.__class__.__name__}.")
         emitter = getattr(class_object, self.signal_name).emit
         if isinstance(self.result, tuple):
             emitter(*self.result)

@@ -22,7 +22,7 @@ class Form(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        child_con = ChildControl(self, enable_internal_logging=True)
+        child_con = ChildControl(self, internal_logging=True)
 
         child_con.call_without_mp_finished.connect(self.updateUI)
         child_con.call_without_mp2_changed.connect(self.updateUI2)
