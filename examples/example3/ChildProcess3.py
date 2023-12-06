@@ -16,17 +16,12 @@ class ChildProcess3(cmp.CProcess):
     def postrun_init(self):
         self.logger, self.logger_h = self.create_new_logger(f"{self.__class__.__name__}-({os.getpid()})")
 
-
     @cmp.CProcess.register_for_signal()
     def test_call(self, a):
         self.logger.info(f"{os.getpid()} -> test_call!")
         time.sleep(1)
         self.test_call2 = 1
         return a
-
-    #@CProperty
-    #def test_call2(self, value: int = 0):
-    #    self.my_value = value
 
     @CProperty
     def test_call2(self, value: int):
