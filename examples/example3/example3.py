@@ -24,9 +24,10 @@ class Form(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        child_con = ChildProcessControl3(self, internal_logging=True, internal_logging_level=logging.DEBUG)
+        child_con = ChildProcessControl3(self, internal_log=False, internal_log_level=logging.DEBUG)
 
         child_con.mp_finished.connect(self.updateUI)
+
 
         self.browser = QTextBrowser()
         self.lineedit = QLineEdit('Type text and press <Enter>')
@@ -40,13 +41,18 @@ class Form(QDialog):
         # self.lineedit.returnPressed.connect(lambda: child_con.call_without_mp(1, 2, c=3))
         self.lineedit.returnPressed.connect(lambda: child_con.test_call(1))
 
+
     def updateUI(self, text):
-        print("updateUI: ", text)
+        #print("updateUI: ", text)
+        self.browser.append("->" + str(text))
+
+    def updateUI2(self, text):
+        #print("updateUI: ", text)
         self.browser.append("->" + str(text))
 
     def closeEvent(self, arg__1):
         self.destroyed.emit()
-        print("Form destroyed.")
+        #print("Form destroyed.")
 
 
 if __name__ == '__main__':
