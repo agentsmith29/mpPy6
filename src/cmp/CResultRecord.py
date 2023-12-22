@@ -1,3 +1,4 @@
+import logging
 from inspect import Signature, Parameter
 
 from cmp import CProcessControl as CProcessControl
@@ -12,7 +13,16 @@ class CResultRecord:
 
     def emit_signal(self, class_object: CProcessControl):
         if hasattr(class_object, '_internal_logger'):
-            class_object._internal_logger.info(f"Function {self.function_name} returned {self.result}. "
+            logger: logging.Logger =  class_object._internal_logger
+        else:
+            logger = logging.getLogger(f"{__name__} - fallback")
+
+        if self.signal_name is None:
+            logger.info(f"Function {self.function_name} returned {self.result}. "
+                                               f"No signal to emit.")
+            return
+        if hasattr(class_object, '_internal_logger'):
+            logger.info(f"Function {self.function_name} returned {self.result}. "
                                                f"Emitting {self} in {class_object.__class__.__name__}.")
         emitter = getattr(class_object, self.signal_name).emit
         if isinstance(self.result, tuple):

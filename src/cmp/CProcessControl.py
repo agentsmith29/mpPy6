@@ -104,9 +104,7 @@ class CProcessControl(CBase, QObject):
                         self.logger.warning(f"Error cannot handle log record: {e}")
                 elif isinstance(res, cmp.CResultRecord):
                     try:
-                        if isinstance(res, Signal):
-                            res.emit_signal(self._signal_class)
-                            self._internal_logger.debug(f"Emitted {res} in {self._signal_class.__class__.__name__}.")
+                        res.emit_signal(self._signal_class)
                     except Exception as e:
                         self._internal_logger.error(f"Error while emitting {res} in {self.__class__.__name__}: {e}")
                 else:
