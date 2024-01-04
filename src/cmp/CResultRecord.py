@@ -1,5 +1,4 @@
 import logging
-from inspect import Signature, Parameter
 
 from cmp import CProcessControl as CProcessControl
 

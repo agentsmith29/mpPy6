@@ -1,5 +1,4 @@
 import logging
-import time
 
 from rich.logging import RichHandler
 
@@ -31,7 +30,6 @@ class CBase:
         """
         formatter = logging.Formatter(logger_format)
         if logger_handler is None:
-            time.sleep(1)
             logger_handler = RichHandler(rich_tracebacks=True)
 
         logger_handler.setLevel(level)

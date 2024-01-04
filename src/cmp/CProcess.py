@@ -1,14 +1,14 @@
-import logging.handlers
 import logging
+import logging.handlers
 import multiprocessing
 import os
-import sys
 import time
 import traceback
-from multiprocessing import Process, Queue, Value
+from multiprocessing import Process, Queue
 
 import cmp
 from cmp.CBase import CBase
+
 
 # This is a Queue that behaves like stdout
 
