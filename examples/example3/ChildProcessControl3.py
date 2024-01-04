@@ -1,3 +1,5 @@
+import logging
+
 from PySide6.QtCore import Signal
 
 import cmp

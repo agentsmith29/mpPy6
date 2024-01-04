@@ -20,8 +20,8 @@ from cmp.CBase import CBase
 
 
 class CProcessControl(CBase, QObject):
-
     on_exception_raised = Signal(object, name='on_exception_raised')
+
     def __init__(self, parent: QObject = None,
                  signal_class: QObject = None,
                  internal_log: bool = False,
@@ -46,7 +46,6 @@ class CProcessControl(CBase, QObject):
         self.cmd_queue = Queue()
         self.state_queue = Queue()
 
-
         # Thread manager for monitoring the state queue
         self.thread_manager = QThreadPool()
 
@@ -61,11 +60,11 @@ class CProcessControl(CBase, QObject):
         self._internal_logger, self._internal_log_handler = self.create_new_logger(f"(cmp) {self.name}")
         self.internal_log_enabled = internal_log
         self.internal_log_level = internal_log_level
-
         self.logger, self.logger_handler = self.create_new_logger(f"{self.__class__.__name__}({os.getpid()})")
 
         self.on_exception_raised.connect(self.display_exception)
         self.msg_box = QMessageBox()
+
     # ==================================================================================================================
     #
     # ==================================================================================================================
@@ -89,6 +88,8 @@ class CProcessControl(CBase, QObject):
         self._child.start()
         self._internal_logger.debug(f"Child process {self._child.name} created.")
         self.thread_manager.start(self._monitor_result_state)
+
+
 
     @property
     def child(self):
@@ -141,11 +142,10 @@ class CProcessControl(CBase, QObject):
             self.msg_box.setDetailedText(e.traceback_short())
             self.msg_box.setStandardButtons(QMessageBox.Ok)
             self.msg_box.show()
-            self._internal_logger.error(f"Error executing {e.function_name} in {e.parent_name}: {e.exception}\n"
-                                        f"{e.traceback()}")
+            self.logger.error(f"Error executing {e.function_name} in {e.parent_name}: {e.exception}\n"
+                              f"{e.traceback()}")
         except Exception as e:
             self._internal_logger.error(f"Error while displaying exception: {e}")
-
 
     def execute_function(self, func: callable, signal: Signal = None):
         self.register_function(signal)(func)(self)
@@ -168,7 +168,7 @@ class CProcessControl(CBase, QObject):
                 args = match.group(2).split(',')
                 return name, args
 
-            def get_signature(self: CProcessControl, *args, **kwargs):
+            def get_signature(self, *args, **kwargs):
 
                 arguments = locals().copy()
                 arguments.pop("func")
@@ -204,6 +204,14 @@ class CProcessControl(CBase, QObject):
             return get_signature
 
         return register
+
+    @register_function()
+    def set_internal_log_level(self, level):
+        self.internal_log_level = level
+
+    @register_function()
+    def set_internal_log_enabled(self, enabled):
+        self.internal_log_enabled = enabled
 
     def safe_exit(self, reason: str = ""):
         self._internal_logger.warning(f"Shutting down ProcessControl {os.getpid()}. Reason: {reason}")

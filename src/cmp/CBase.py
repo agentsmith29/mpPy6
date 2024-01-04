@@ -49,12 +49,14 @@ class CBase:
         """
         if self._internal_logger is not None:
             if enable:
+                self._internal_logger.disabled = False
                 self._internal_logger.info(f"Internal logger of {self.__class__.__name__} has been enabled.")
+
             else:
                 self._internal_logger.warning(f"Internal logger of {self.__class__.__name__} has been disabled.")
-            self._internal_logger.level = logging.ERROR
+                self._internal_logger.disabled = True
         else:
-            raise Exception("Can't enable internal logger. Internal logger not initialized")
+            raise Exception("Can't enable internal logger. Internal logger not initialized")#
 
     @property
     def internal_log_level(self):
@@ -80,8 +82,6 @@ class CBase:
                 self._internal_logger.info(f"Internal log level of {self.__class__.__name__} has been set to CRITICAL.")
             else:
                 self._internal_logger.info(f"Internal log level of {self.__class__.__name__} has been set to {level}.")
-
-
             self._internal_logger.setLevel(level)
         else:
             raise Exception("Can't set internal log level. Internal logger not initialized")
