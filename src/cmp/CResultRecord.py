@@ -18,11 +18,11 @@ class CResultRecord:
             logger = logging.getLogger(f"{__name__} - fallback")
 
         if self.signal_name is None:
-            logger.info(f"Function {self.function_name} returned {self.result}. "
+            logger.debug(f"Function {self.function_name} returned {self.result}. "
                                                f"No signal to emit.")
             return
         if hasattr(class_object, '_internal_logger'):
-            logger.info(f"Function {self.function_name} returned {self.result}. "
+            logger.debug(f"Function {self.function_name} returned {self.result}. "
                                                f"Emitting {self} in {class_object.__class__.__name__}.")
         emitter = getattr(class_object, self.signal_name).emit
         if isinstance(self.result, tuple):

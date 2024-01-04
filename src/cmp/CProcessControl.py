@@ -31,8 +31,9 @@ class CProcessControl(CBase, QObject):
         self.log_file = log_file
         self._internal_logger = self.create_new_logger(f"(cmp) {self.name}",
                                                        to_file=self.log_file, enabled=internal_log, level=internal_log_level)
+
         self.logger = self.create_new_logger(f"{self.__class__.__name__}({os.getpid()})",
-                                             to_file=self.log_file, enabled=internal_log, level=internal_log_level)
+                                             to_file=self.log_file, enabled=internal_log)
 
         if isinstance(parent, QWidget) or isinstance(parent, QWindow):
             parent.destroyed.connect(lambda: self.safe_exit(reason="Parent destroyed."))
@@ -87,7 +88,7 @@ class CProcessControl(CBase, QObject):
         # self._child.register_kill_flag(self._child_kill_flag)
         self._child_process_pid = child.pid
         self._child.start()
-        self._internal_logger.debug(f"Child process {self._child.name} created.")
+        self._internal_logger.info(f"Child process {self._child.name} created.")
         self.thread_manager.start(self._monitor_result_state)
 
     @property

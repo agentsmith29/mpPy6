@@ -25,7 +25,7 @@ class Form(QDialog):
         super().__init__(parent)
 
         child_con = ChildProcessControl3(self, internal_log_level=logging.WARNING, log_file="log.log")
-        child_con.set_internal_log_level(logging.INFO)
+        #child_con.set_internal_log_level(logging.INFO)
         child_con.mp_finished.connect(self.updateUI)
 
 
@@ -39,7 +39,7 @@ class Form(QDialog):
         self.lineedit.setFocus()
         self.setWindowTitle('Upper')
         # self.lineedit.returnPressed.connect(lambda: child_con.call_without_mp(1, 2, c=3))
-        self.lineedit.returnPressed.connect(lambda: child_con.exception_call(1))
+        self.lineedit.returnPressed.connect(lambda: child_con.test_call(1))
 
 
     def updateUI(self, text):

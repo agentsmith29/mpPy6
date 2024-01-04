@@ -66,6 +66,7 @@ class CProcess(CBase, Process):
             f"{os.getpid()}({self.__class__.__name__})",
             logger_handler=logging.handlers.QueueHandler(self.state_queue),
             logger_format="%(message)s",
+            enabled=True,
             to_file=self.log_file)
 
 

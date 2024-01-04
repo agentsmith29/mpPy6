@@ -51,7 +51,7 @@ class CBase:
 
         if enabled:
             _internal_logger.disabled = False
-            _internal_logger.info(f"Logger {logger_name} created with handlers {_internal_logger.handlers} and has been enabled (Level {level}).")
+            _internal_logger.info(f"Logger {logger_name} created with ({len(_internal_logger.handlers)}) handlers and has been enabled (Level {level}).")
         else:
             _internal_logger.info(f"Logger {logger_name} created and has been disabled.")
             _internal_logger.disabled = True
