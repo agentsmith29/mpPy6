@@ -6,6 +6,7 @@ from rich.logging import RichHandler
 
 from .CCommandRecord import CCommandRecord
 from .CResultRecord import CResultRecord
+from .CException import CException
 
 from .CProcess import CProcess
 from .CProcessControl import CProcessControl

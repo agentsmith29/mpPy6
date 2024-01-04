@@ -118,6 +118,15 @@ class CProcess(CBase, Process):
         result = cmp.CResultRecord(func_name, signal_name, res)
         self.state_queue.put(result)
 
+    def _put_exception_to_queue(self, func_name, exc):
+        self._internal_logger.debug(f"Error executing {func_name}.")
+        tb_str = traceback.format_exception(type(exc), value=exc, tb=exc.__traceback__)
+        tb_join = "".join(tb_str[-2:len(tb_str)])
+        result = cmp.CException(self.name, func_name, exc, )
+        result.set_additional_info(tb_join)
+        self.state_queue.put(result)
+
+
     @staticmethod
     def register_signal(postfix=None, signal_name: str = None):
         _postfix = postfix.strip() if postfix is not None else None
@@ -138,9 +147,15 @@ class CProcess(CBase, Process):
                     self._internal_logger.debug(f"Constructing signal name for function '{func.__name__}': {sign}")
                 else:
                     sign = None
-                res = func(self, *args, **kwargs)
-                self._put_result_to_queue(func_name, sign, res)
-                return res
+                try:
+                    res = func(self, *args, **kwargs)
+                    self._put_result_to_queue(func_name, sign, res)
+                    return res
+                except Exception as e:
+                    self._internal_logger.error(f"Error in function {func_name}: {e} ({type(e)})")
+                    self._put_exception_to_queue(func.__name__, e)
+                    return None
+
 
             return get_signature
 

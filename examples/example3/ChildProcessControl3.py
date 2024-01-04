@@ -17,3 +17,6 @@ class ChildProcessControl3(cmp.CProcessControl):
         print(a)
         #print(f"{os.getpid()} -> call_without_mp with {a}, {b}, {c}!")
 
+    @cmp.CProcessControl.register_function()
+    def exception_call(self, a):
+       pass

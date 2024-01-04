@@ -39,7 +39,7 @@ class Form(QDialog):
         self.lineedit.setFocus()
         self.setWindowTitle('Upper')
         # self.lineedit.returnPressed.connect(lambda: child_con.call_without_mp(1, 2, c=3))
-        self.lineedit.returnPressed.connect(lambda: child_con.test_call(1))
+        self.lineedit.returnPressed.connect(lambda: child_con.exception_call(1))
 
 
     def updateUI(self, text):

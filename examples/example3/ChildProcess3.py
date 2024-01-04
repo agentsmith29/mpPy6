@@ -28,3 +28,7 @@ class ChildProcess3(cmp.CProcess):
     @test_call2.setter(emit_to='bar')
     def test_call2(self, value: int):
         self.my_value = value
+
+    @cmp.CProcess.register_signal()
+    def exception_call(self, value: int):
+        return value/0

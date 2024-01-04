@@ -5,20 +5,23 @@ import os
 import re
 import signal
 import time
+import traceback
 from multiprocessing import Queue, Process, Value
 from typing import Type
 
 from PySide6.QtCore import QObject, QThreadPool, Signal
 from PySide6.QtGui import QWindow
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget, QMessageBox
 from rich.logging import RichHandler
 
 import cmp
+from cmp import CException
 from cmp.CBase import CBase
 
 
 class CProcessControl(CBase, QObject):
 
+    on_exception_raised = Signal(object, name='on_exception_raised')
     def __init__(self, parent: QObject = None,
                  signal_class: QObject = None,
                  internal_log: bool = False,
@@ -60,6 +63,9 @@ class CProcessControl(CBase, QObject):
         self.internal_log_level = internal_log_level
 
         self.logger, self.logger_handler = self.create_new_logger(f"{self.__class__.__name__}({os.getpid()})")
+
+        self.on_exception_raised.connect(self.display_exception)
+        self.msg_box = QMessageBox()
     # ==================================================================================================================
     #
     # ==================================================================================================================
@@ -107,6 +113,12 @@ class CProcessControl(CBase, QObject):
                         res.emit_signal(self._signal_class)
                     except Exception as e:
                         self._internal_logger.error(f"Error while emitting {res} in {self.__class__.__name__}: {e}")
+                elif isinstance(res, cmp.CException):
+                    self._internal_logger.error(f"Received exception: {res}")
+                    try:
+                        self.on_exception_raised.emit(res)
+                    except Exception as e:
+                        self._internal_logger.error(f"Error while emitting exception: {e}")
                 else:
                     self._internal_logger.error(f"Received unknown result {res}!")
 
@@ -117,6 +129,23 @@ class CProcessControl(CBase, QObject):
         self._internal_logger.info(f"Ended monitor thread. Child process alive: {self._child.is_alive()}")
         self.state_queue.close()
         self.cmd_queue.close()
+
+    def display_exception(self, e: cmp.CException):
+        # Create a message box
+        try:
+            self.msg_box = QMessageBox()
+            self.msg_box.setIcon(QMessageBox.Critical)
+            self.msg_box.setText(f"Error executing {e.function_name} in {e.parent_name}")
+            self.msg_box.setInformativeText(f"Error: {e.exception}")
+            self.msg_box.setWindowTitle("Error")
+            self.msg_box.setDetailedText(e.traceback_short())
+            self.msg_box.setStandardButtons(QMessageBox.Ok)
+            self.msg_box.show()
+            self._internal_logger.error(f"Error executing {e.function_name} in {e.parent_name}: {e.exception}\n"
+                                        f"{e.traceback()}")
+        except Exception as e:
+            self._internal_logger.error(f"Error while displaying exception: {e}")
+
 
     def execute_function(self, func: callable, signal: Signal = None):
         self.register_function(signal)(func)(self)
