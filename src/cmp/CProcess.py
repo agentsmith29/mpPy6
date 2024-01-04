@@ -58,14 +58,15 @@ class CProcess(CBase, Process):
         self._internal_logger = self.create_new_logger(
             f"(cmp) {self.name}",
             logger_handler=logging.handlers.QueueHandler(self.state_queue),
-            logger_format="%(message)s")
-        self.internal_log_enabled = self._internal_log_enabled_
-        self.internal_log_level = self._internal_log_level_
-
+            logger_format="%(message)s",
+            to_file=self.log_file,
+            enabled=self._internal_log_enabled_, level=self._internal_log_level_)
 
         self.logger = self.create_new_logger(
             f"{os.getpid()}({self.__class__.__name__})",
-            logger_handler=logging.handlers.QueueHandler(self.state_queue))
+            logger_handler=logging.handlers.QueueHandler(self.state_queue),
+            logger_format="%(message)s",
+            to_file=self.log_file)
 
 
         self._internal_logger.debug(f"Child process {self.__class__.__name__} started.")

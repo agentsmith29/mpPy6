@@ -24,21 +24,15 @@ class CProcessControl(CBase, QObject):
 
     def __init__(self, parent: QObject = None,
                  signal_class: QObject = None,
-                 internal_log: bool = False,
-                 internal_log_level: int = logging.DEBUG,
-                 log_file: str = None):
+                 internal_log: bool = True, internal_log_level: int = logging.WARNING, log_file: str = None):
         QObject.__init__(self, parent)
         CBase.__init__(self)
-        self.log_file = log_file
-        self._internal_logger = self.create_new_logger(
-            f"(cmp) {self.name}",
-            to_file=self.log_file)
-        self.logger = self.create_new_logger(
-            f"{self.__class__.__name__}({os.getpid()})",
-            to_file=self.log_file)
-        self.internal_log_enabled = internal_log
-        self.internal_log_level = internal_log_level
 
+        self.log_file = log_file
+        self._internal_logger = self.create_new_logger(f"(cmp) {self.name}",
+                                                       to_file=self.log_file, enabled=internal_log, level=internal_log_level)
+        self.logger = self.create_new_logger(f"{self.__class__.__name__}({os.getpid()})",
+                                             to_file=self.log_file, enabled=internal_log, level=internal_log_level)
 
         if isinstance(parent, QWidget) or isinstance(parent, QWindow):
             parent.destroyed.connect(lambda: self.safe_exit(reason="Parent destroyed."))
