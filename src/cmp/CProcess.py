@@ -19,7 +19,7 @@ class CProcess(CBase, Process):
 
     def __init__(self, state_queue: Queue, cmd_queue: Queue,
                  kill_flag,
-                 internal_log, internal_log_level,
+                 internal_log, internal_log_level, log_file=None,
                  *args, **kwargs):
         Process.__init__(self)
 
@@ -27,6 +27,7 @@ class CProcess(CBase, Process):
         self._internal_log_level_ = internal_log_level
         self.logger = None
         self.logger_handler = None
+        self.log_file = log_file
 
         self.cmd_queue = cmd_queue
         self.state_queue = state_queue
@@ -54,23 +55,23 @@ class CProcess(CBase, Process):
     def run(self):
         self.name = f"{os.getpid()}({self.name})"
 
-        self._internal_logger, self._internal_log_handler = self.create_new_logger(
+        self._internal_logger = self.create_new_logger(
             f"(cmp) {self.name}",
-            logger_handler=logging.handlers.QueueHandler(self.state_queue))
+            logger_handler=logging.handlers.QueueHandler(self.state_queue),
+            logger_format="%(message)s")
         self.internal_log_enabled = self._internal_log_enabled_
         self.internal_log_level = self._internal_log_level_
 
 
-        self.logger, self.logger_handler = self.create_new_logger(f"{os.getpid()}({self.__class__.__name__})",
-                                                                  logger_handler=logging.handlers.QueueHandler(
-                                                                      self.state_queue))
-
+        self.logger = self.create_new_logger(
+            f"{os.getpid()}({self.__class__.__name__})",
+            logger_handler=logging.handlers.QueueHandler(self.state_queue))
 
 
         self._internal_logger.debug(f"Child process {self.__class__.__name__} started.")
 
-        sys.stderr.write = self.logger.error
-        sys.stdout.write = self.logger.info
+        #sys.stderr.write = self.logger.error
+        #sys.stdout.write = self.logger.info
 
         self.postrun_init()
 
@@ -103,7 +104,7 @@ class CProcess(CBase, Process):
         except Exception as e:
             self._internal_logger.warning(f"Received Exception {e}! Exiting Process {os.getpid()}")
 
-        self._internal_logger.debug(f"Child process monitor {self.__class__.__name__} ended.")
+        self._internal_logger.warning(f"Child process monitor {self.__class__.__name__} ended.")
 
     def __del__(self):
         #self.logger.warning(f"Child process {self.name} deleted.")
@@ -125,7 +126,6 @@ class CProcess(CBase, Process):
         result = cmp.CException(self.name, func_name, exc, )
         result.set_additional_info(tb_join)
         self.state_queue.put(result)
-
 
 
 
@@ -170,6 +170,14 @@ class CProcess(CBase, Process):
     @register_signal()
     def set_internal_log_enabled(self, enabled):
         self.internal_log_enabled = enabled
+
+    @register_signal()
+    def set_child_log_level(self, level):
+        self.logger.setLevel(level)
+
+    @register_signal()
+    def set_child_log_enabled(self, enabled):
+        self.logger.disabled = not enabled
 
     @staticmethod
     def setter(signal_same: str = None):

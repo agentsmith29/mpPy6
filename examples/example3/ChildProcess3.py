@@ -12,7 +12,7 @@ class ChildProcess3(cmp.CProcess):
         self.logger = None
 
     def postrun_init(self):
-        self.logger, self.logger_h = self.create_new_logger(f"{self.__class__.__name__}-({os.getpid()})")
+        self.logger = self.create_new_logger(f"{self.__class__.__name__}-({os.getpid()})")
 
     @cmp.CProcess.register_signal()
     def test_call(self, a):

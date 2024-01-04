@@ -15,23 +15,35 @@ class CBase:
 
     def create_new_logger(self, logger_name: str,
                           logger_handler: logging.Handler = None,
-                          logger_format: str = " %(name)s %(message)s") -> (logging.Logger, logging.Handler):
+                          logger_format: str = "%(asctime)s - %(name)s %(message)s",
+                          to_file=None) -> (logging.Logger, logging.Handler):
         """
         Creates a new logger with the given name and handler. If no handler is given, a RichHandler will be used.
+
         :param logger_name:
         :param logger_handler:
         :param logger_format:
+        :param to_file:
         :return:
         """
         if logger_handler is None:
             logger_handler = RichHandler(rich_tracebacks=True)
-
+        logger_handler.setLevel(logging.DEBUG)
         _internal_logger = logging.getLogger(logger_name)
         _internal_logger.handlers = [logger_handler]
         _internal_logger.setLevel(logging.DEBUG)
         formatter = logging.Formatter(logger_format)
         logger_handler.setFormatter(formatter)
-        return _internal_logger, logger_handler
+
+        if to_file is not None:
+            _file_handler = logging.FileHandler(to_file)
+            _file_handler.setLevel(logging.DEBUG)
+            _file_handler_formated = logging.Formatter(f"%(levelname)s > {logger_format})")
+            _file_handler.setFormatter(_file_handler_formated)
+            _internal_logger.addHandler(_file_handler)
+
+        return _internal_logger
+
 
     @property
     def internal_log_enabled(self):
@@ -60,7 +72,7 @@ class CBase:
 
     @property
     def internal_log_level(self):
-        return self._internal_logger.level
+        return self._internal_logger.handlers[0].level
 
     @internal_log_level.setter
     def internal_log_level(self, level: int) -> None:
@@ -82,7 +94,7 @@ class CBase:
                 self._internal_logger.info(f"Internal log level of {self.__class__.__name__} has been set to CRITICAL.")
             else:
                 self._internal_logger.info(f"Internal log level of {self.__class__.__name__} has been set to {level}.")
-            self._internal_logger.setLevel(level)
+            self._internal_logger.handlers[0].setLevel(level)
         else:
             raise Exception("Can't set internal log level. Internal logger not initialized")
 

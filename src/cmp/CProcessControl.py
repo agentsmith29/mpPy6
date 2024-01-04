@@ -25,10 +25,20 @@ class CProcessControl(CBase, QObject):
     def __init__(self, parent: QObject = None,
                  signal_class: QObject = None,
                  internal_log: bool = False,
-                 internal_log_level: int = logging.DEBUG):
+                 internal_log_level: int = logging.DEBUG,
+                 log_file: str = None):
         QObject.__init__(self, parent)
         CBase.__init__(self)
-        # self._kill_child_process_flag = kill_child_process_flag
+        self.log_file = log_file
+        self._internal_logger = self.create_new_logger(
+            f"(cmp) {self.name}",
+            to_file=self.log_file)
+        self.logger = self.create_new_logger(
+            f"{self.__class__.__name__}({os.getpid()})",
+            to_file=self.log_file)
+        self.internal_log_enabled = internal_log
+        self.internal_log_level = internal_log_level
+
 
         if isinstance(parent, QWidget) or isinstance(parent, QWindow):
             parent.destroyed.connect(lambda: self.safe_exit(reason="Parent destroyed."))
@@ -57,10 +67,6 @@ class CProcessControl(CBase, QObject):
 
         self._child_kill_flag = Value('i', 1)
 
-        self._internal_logger, self._internal_log_handler = self.create_new_logger(f"(cmp) {self.name}")
-        self.internal_log_enabled = internal_log
-        self.internal_log_level = internal_log_level
-        self.logger, self.logger_handler = self.create_new_logger(f"{self.__class__.__name__}({os.getpid()})")
 
         self.on_exception_raised.connect(self.display_exception)
         self.msg_box = QMessageBox()
@@ -82,14 +88,13 @@ class CProcessControl(CBase, QObject):
                             kill_flag=self._child_kill_flag,
                             internal_log=self.internal_log_enabled,
                             internal_log_level=self.internal_log_level,
+                            log_file=self.log_file,
                             *args, **kwargs)
         # self._child.register_kill_flag(self._child_kill_flag)
         self._child_process_pid = child.pid
         self._child.start()
         self._internal_logger.debug(f"Child process {self._child.name} created.")
         self.thread_manager.start(self._monitor_result_state)
-
-
 
     @property
     def child(self):
@@ -212,6 +217,22 @@ class CProcessControl(CBase, QObject):
     @register_function()
     def set_internal_log_enabled(self, enabled):
         self.internal_log_enabled = enabled
+
+    @register_function()
+    def set_child_log_level(self, level):
+        """
+        Sets the regular logging level of the child process.
+        :param level:
+        :return:
+        """
+
+    @register_function()
+    def set_child_log_enabled(self, enabled):
+        """
+        Enables or disables logging of the child process.
+        :param enabled:
+        :return:
+        """
 
     def safe_exit(self, reason: str = ""):
         self._internal_logger.warning(f"Shutting down ProcessControl {os.getpid()}. Reason: {reason}")
