@@ -28,7 +28,7 @@ class _Cache(object):
         # set attribute on instance
         name = '%s_called' % self.func.__name__
         # print(f"Setting {name} in {}!")
-        self.instance_._internal_logger.debug(
+        self.instance_._module_logger.debug(
             f"Setting {name} in {self.instance_.__class__.__name__} and emitting {self.signal_name}!")
         # setattr(self.instance_, name, datetime.utcnow())
 
@@ -64,7 +64,7 @@ class CProperty:
     def __set__(self, obj: cmp.CProcess, value):
         if self.fset is None:
             raise AttributeError("can't set attribute")
-        obj._internal_logger.debug(f"Setting {self.signal_name}!")
+        obj._module_logger.debug(f"Setting {self.signal_name}!")
         result = cmp.CResultRecord(str(self.fset.__name__), self.signal_name, value)
         obj.state_queue.put(result)
 

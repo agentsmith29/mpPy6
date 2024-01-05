@@ -15,7 +15,7 @@ class CCommandRecord:
 
     def execute(self, class_object: CProcess):
         if hasattr(class_object, '_internal_logger'):
-            class_object._internal_logger.info(f"Executing {self} in {class_object.name}.")
+            class_object._module_logger.info(f"Executing {self} in {class_object.name}.")
         if self.signal_name is not None:
             getattr(class_object, self.func_name)(signal_name=self.signal_name, *self.args, **self.kwargs)
         else:

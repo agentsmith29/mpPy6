@@ -11,8 +11,8 @@ class CResultRecord:
         self.result = result
 
     def emit_signal(self, class_object: CProcessControl):
-        if hasattr(class_object, '_internal_logger'):
-            logger: logging.Logger =  class_object._internal_logger
+        if hasattr(class_object, '_module_logger'):
+            logger: logging.Logger =  class_object._module_logger
         else:
             logger = logging.getLogger(f"{__name__} - fallback")
 
@@ -20,7 +20,7 @@ class CResultRecord:
             logger.debug(f"Function {self.function_name} returned {self.result}. "
                                                f"No signal to emit.")
             return
-        if hasattr(class_object, '_internal_logger'):
+        if hasattr(class_object, '_module_logger'):
             logger.debug(f"Function {self.function_name} returned {self.result}. "
                                                f"Emitting {self} in {class_object.__class__.__name__}.")
         emitter = getattr(class_object, self.signal_name).emit

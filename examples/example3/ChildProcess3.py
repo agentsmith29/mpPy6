@@ -15,6 +15,7 @@ class ChildProcess3(cmp.CProcess):
     @cmp.CProcess.register_signal()
     def test_call(self, a):
         self.logger.info(f"{os.getpid()} -> test_call!")
+        self.logger.debug(f"{os.getpid()} -> test_call2!")
         time.sleep(1)
        # self.test_call2 = 1
         return a

@@ -26,7 +26,7 @@ class _Cache(object):
         # set attribute on instance
         name = '%s_called' % self.func.__name__
         # print(f"Setting {name} in {}!")
-        self.instance_._internal_logger.debug(
+        self.instance_._module_logger.debug(
             f"Setting {name} in {self.instance_.__class__.__name__} and emitting {self.signal_name}!")
         # setattr(self.instance_, name, datetime.utcnow())
 

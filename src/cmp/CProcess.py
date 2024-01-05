@@ -55,22 +55,19 @@ class CProcess(CBase, Process):
     def run(self):
         self.name = f"{os.getpid()}({self.name})"
 
-        self._internal_logger = self.create_new_logger(
-            f"(cmp) {self.name}",
-            logger_handler=logging.handlers.QueueHandler(self.state_queue),
-            logger_format="%(message)s",
-            to_file=self.log_file,
-            enabled=self._internal_log_enabled_, level=self._internal_log_level_)
+        self._module_logger = self.create_new_logger(f"(cmp) {self.name}",
+                                                     logger_handler=logging.handlers.QueueHandler(self.state_queue),
+                                                     enabled=self._internal_log_enabled_,
+                                                     level=self._internal_log_level_,
+                                                     propagate=True
+                                                     )
 
-        self.logger = self.create_new_logger(
-            f"{os.getpid()}({self.__class__.__name__})",
-            logger_handler=logging.handlers.QueueHandler(self.state_queue),
-            logger_format="%(message)s",
-            enabled=True,
-            to_file=self.log_file)
+        self.logger = self.create_new_logger(f"{os.getpid()}({self.__class__.__name__})",
+                                             logger_handler=logging.handlers.QueueHandler(self.state_queue),
+                                             enabled=True)
 
 
-        self._internal_logger.debug(f"Child process {self.__class__.__name__} started.")
+        self._module_logger.debug(f"Child process {self.__class__.__name__} started.")
 
         #sys.stderr.write = self.logger.error
         #sys.stdout.write = self.logger.info
@@ -86,27 +83,27 @@ class CProcess(CBase, Process):
                     continue
 
                 if isinstance(cmd, cmp.CCommandRecord):
-                    self._internal_logger.debug(
+                    self._module_logger.debug(
                         f"Received cmd: {cmd}, args: {cmd.args}, kwargs: {cmd.kwargs}, Signal to emit: {cmd.signal_name}")
                     try:
                         cmd.execute(self)
                     except Exception as e:
                         traceback_str = ''.join(traceback.format_tb(e.__traceback__))
-                        self._internal_logger.error(f"Exception '{e}' occurred in {cmd}!. Traceback:\n{traceback_str}")
-                    self._internal_logger.debug(f"Command {cmd} finished.")
+                        self._module_logger.error(f"Exception '{e}' occurred in {cmd}!. Traceback:\n{traceback_str}")
+                    self._module_logger.debug(f"Command {cmd} finished.")
                 else:
-                    self._internal_logger.error(f"Received unknown command {cmd}!")
-            self._internal_logger.error(f"Control Process exited. Terminating Process {os.getpid()}")
+                    self._module_logger.error(f"Received unknown command {cmd}!")
+            self._module_logger.error(f"Control Process exited. Terminating Process {os.getpid()}")
             if self._kill_flag.value == 0:
-                self._internal_logger.error(f"Process {os.getpid()} received kill signal!")
+                self._module_logger.error(f"Process {os.getpid()} received kill signal!")
         except KeyboardInterrupt:
-            self._internal_logger.warning(f"Received KeyboardInterrupt! Exiting Process {os.getpid()}")
+            self._module_logger.warning(f"Received KeyboardInterrupt! Exiting Process {os.getpid()}")
             time.sleep(1)
             self.close()
         except Exception as e:
-            self._internal_logger.warning(f"Received Exception {e}! Exiting Process {os.getpid()}")
+            self._module_logger.warning(f"Received Exception {e}! Exiting Process {os.getpid()}")
 
-        self._internal_logger.warning(f"Child process monitor {self.__class__.__name__} ended.")
+        self._module_logger.warning(f"Child process monitor {self.__class__.__name__} ended.")
 
     def __del__(self):
         #self.logger.warning(f"Child process {self.name} deleted.")
@@ -115,14 +112,14 @@ class CProcess(CBase, Process):
 
     def _put_result_to_queue(self, func_name, signal_name, res):
         if signal_name is not None:
-            self._internal_logger.debug(f"{func_name} finished. Emitting signal {signal_name} in control class.")
+            self._module_logger.debug(f"{func_name} finished. Emitting signal {signal_name} in control class.")
         else:
-            self._internal_logger.debug(f"{func_name} finished. No signal to emit.")
+            self._module_logger.debug(f"{func_name} finished. No signal to emit.")
         result = cmp.CResultRecord(func_name, signal_name, res)
         self.state_queue.put(result)
 
     def _put_exception_to_queue(self, func_name, exc):
-        self._internal_logger.debug(f"Error executing {func_name}.")
+        self._module_logger.debug(f"Error executing {func_name}.")
         tb_str = traceback.format_exception(type(exc), value=exc, tb=exc.__traceback__)
         tb_join = "".join(tb_str[-2:len(tb_str)])
         result = cmp.CException(self.name, func_name, exc, )
@@ -148,7 +145,7 @@ class CProcess(CBase, Process):
                     sign = kwargs.pop('signal_name')
                 elif _postfix is not None:
                     sign = f"{func.__name__}{_postfix}"
-                    self._internal_logger.debug(f"Constructing signal name for function '{func.__name__}': {sign}")
+                    self._module_logger.debug(f"Constructing signal name for function '{func.__name__}': {sign}")
                 else:
                     sign = None
                 try:
@@ -156,7 +153,7 @@ class CProcess(CBase, Process):
                     self._put_result_to_queue(func_name, sign, res)
                     return res
                 except Exception as e:
-                    self._internal_logger.error(f"Error in function {func_name}: {e} ({type(e)})")
+                    self._module_logger.error(f"Error in function {func_name}: {e} ({type(e)})")
                     self._put_exception_to_queue(func.__name__, e)
                     return None
 
@@ -187,7 +184,7 @@ class CProcess(CBase, Process):
             def get_signature(self, *args, **kwargs):
                 func_name = f"{func.__name__}->{self.pid}"
                 res = func(self, *args, **kwargs)
-                self._internal_logger.debug(f"{func_name} finished. Emitting signal {signal_same} in control class.")
+                self._module_logger.debug(f"{func_name} finished. Emitting signal {signal_same} in control class.")
                 result = cmp.CResultRecord(func_name, signal_same, res)
                 self.state_queue.put(result)
                 return res

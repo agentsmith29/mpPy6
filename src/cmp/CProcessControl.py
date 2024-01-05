@@ -19,16 +19,16 @@ class CProcessControl(CBase, QObject):
 
     def __init__(self, parent: QObject = None,
                  signal_class: QObject = None,
-                 internal_log: bool = True, internal_log_level: int = logging.WARNING, log_file: str = None):
+                 module_log: bool = True, module_log_level: int = logging.WARNING, log_file: str = None):
         QObject.__init__(self, parent)
         CBase.__init__(self)
 
         self.log_file = log_file
-        self._internal_logger = self.create_new_logger(f"(cmp) {self.name}",
-                                                       to_file=self.log_file, enabled=internal_log, level=internal_log_level)
+        self._module_logger = self.create_new_logger(f"(cmp) {self.name}",
+                                                     enabled=module_log, level=module_log_level
+                                                     )
 
-        self.logger = self.create_new_logger(f"{self.__class__.__name__}({os.getpid()})",
-                                             to_file=self.log_file, enabled=internal_log)
+        self.logger = self.create_new_logger(f"{self.__class__.__name__}({os.getpid()})", enabled=module_log)
 
         if isinstance(parent, QWidget) or isinstance(parent, QWindow):
             parent.destroyed.connect(lambda: self.safe_exit(reason="Parent destroyed."))
@@ -72,7 +72,7 @@ class CProcessControl(CBase, QObject):
         return self._child_process_pid
 
     def register_child_process(self, child, *args, **kwargs):
-        self._internal_logger.debug(f"Registering child process.")
+        self._module_logger.debug(f"Registering child process.")
 
         self._child = child(self.state_queue, self.cmd_queue,
                             kill_flag=self._child_kill_flag,
@@ -83,7 +83,7 @@ class CProcessControl(CBase, QObject):
         # self._child.register_kill_flag(self._child_kill_flag)
         self._child_process_pid = child.pid
         self._child.start()
-        self._internal_logger.info(f"Child process {self._child.name} created.")
+        self._module_logger.info(f"Child process {self._child.name} created.")
         self.thread_manager.start(self._monitor_result_state)
 
     @property
@@ -91,7 +91,7 @@ class CProcessControl(CBase, QObject):
         return self._child
 
     def _monitor_result_state(self):
-        self._internal_logger.info("Starting monitor thread.")
+        self._module_logger.info("Starting monitor thread.")
         try:
             while self._child.is_alive():
                 try:
@@ -108,21 +108,21 @@ class CProcessControl(CBase, QObject):
                     try:
                         res.emit_signal(self._signal_class)
                     except Exception as e:
-                        self._internal_logger.error(f"Error while emitting {res} in {self.__class__.__name__}: {e}")
+                        self._module_logger.error(f"Error while emitting {res} in {self.__class__.__name__}: {e}")
                 elif isinstance(res, cmp.CException):
-                    self._internal_logger.error(f"Received exception: {res}")
+                    self._module_logger.error(f"Received exception: {res}")
                     try:
                         self.on_exception_raised.emit(res)
                     except Exception as e:
-                        self._internal_logger.error(f"Error while emitting exception: {e}")
+                        self._module_logger.error(f"Error while emitting exception: {e}")
                 else:
-                    self._internal_logger.error(f"Received unknown result {res}!")
+                    self._module_logger.error(f"Received unknown result {res}!")
 
         except:
-            self._internal_logger.error(f"Error in monitor thread")
+            self._module_logger.error(f"Error in monitor thread")
             time.sleep(1)
 
-        self._internal_logger.info(f"Ended monitor thread. Child process alive: {self._child.is_alive()}")
+        self._module_logger.info(f"Ended monitor thread. Child process alive: {self._child.is_alive()}")
         self.state_queue.close()
         self.cmd_queue.close()
 
@@ -140,7 +140,7 @@ class CProcessControl(CBase, QObject):
             self.logger.error(f"Error executing {e.function_name} in {e.parent_name}: {e.exception}\n"
                               f"{e.traceback()}")
         except Exception as e:
-            self._internal_logger.error(f"Error while displaying exception: {e}")
+            self._module_logger.error(f"Error while displaying exception: {e}")
 
     def execute_function(self, func: callable, signal: Signal = None):
         self.register_function(signal)(func)(self)
@@ -176,24 +176,24 @@ class CProcessControl(CBase, QObject):
                 if signal is not None:
                     sig_name, sig_args = match_signal_name(signal)
                     cmd.register_signal(sig_name)
-                    self._internal_logger.debug(f"New function registered: {cmd} -> "
+                    self._module_logger.debug(f"New function registered: {cmd} -> "
                                                 f"{cmd.signal_name if cmd.signal_name is not None else 'None'}("
                                                 f"{', '.join(str(a) for a in sig_args) if sig_args is not None else 'None'})")
                 else:
-                    self._internal_logger.debug(f"New function registered: {cmd}")
+                    self._module_logger.debug(f"New function registered: {cmd}")
 
                 try:
-                    self._internal_logger.debug(f"Executing {name} with args {args} and kwargs {kwargs}")
+                    self._module_logger.debug(f"Executing {name} with args {args} and kwargs {kwargs}")
                     func(self, *args, **kwargs)
                 except Exception as e:
-                    self._internal_logger.error(f"Error while executing {cmd}: {e}")
+                    self._module_logger.error(f"Error while executing {cmd}: {e}")
                     raise e
 
                 try:
                     self.cmd_queue.put(cmd)
-                    self._internal_logger.debug(f"{cmd} put into cmd_queue.")
+                    self._module_logger.debug(f"{cmd} put into cmd_queue.")
                 except Exception as e:
-                    self._internal_logger.error(f"Error while putting {cmd} into cmd_queue: {e}")
+                    self._module_logger.error(f"Error while putting {cmd} into cmd_queue: {e}")
                     raise e
 
             return get_signature
@@ -225,8 +225,8 @@ class CProcessControl(CBase, QObject):
         """
 
     def safe_exit(self, reason: str = ""):
-        self._internal_logger.warning(f"Shutting down ProcessControl {os.getpid()}. Reason: {reason}")
+        self._module_logger.warning(f"Shutting down ProcessControl {os.getpid()}. Reason: {reason}")
         self._child_kill_flag.value = 0
 
     def __del__(self):
-        self._internal_logger.warning(f"Closing ProcessControl {self.__class__.__name__} with pid {os.getpid()}")
+        self._module_logger.warning(f"Closing ProcessControl {self.__class__.__name__} with pid {os.getpid()}")

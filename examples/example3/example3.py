@@ -12,6 +12,7 @@ from threading import Thread
 
 from PySide6.QtCore import QObject, Signal, SIGNAL
 from PySide6.QtWidgets import QDialog, QApplication, QTextBrowser, QLineEdit, QVBoxLayout, QMainWindow, QMessageBox
+from rich.logging import RichHandler
 
 sys.path.append('./src')
 from ChildProcessControl3 import ChildProcessControl3
@@ -24,8 +25,15 @@ class Form(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        child_con = ChildProcessControl3(self, internal_log_level=logging.WARNING, log_file="log.log")
-        #child_con.set_internal_log_level(logging.INFO)
+        FORMAT = "%(name)s %(message)s"
+        logging.basicConfig(
+            level=logging.DEBUG, format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
+        )
+
+        child_con = ChildProcessControl3(self)
+        child_con.internal_log_enabled = True
+        child_con.internal_log_level = logging.INFO
+
         child_con.mp_finished.connect(self.updateUI)
 
 
