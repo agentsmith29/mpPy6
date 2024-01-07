@@ -203,10 +203,12 @@ class CProcessControl(CBase, QObject):
     @register_function()
     def set_internal_log_level(self, level):
         self.internal_log_level = level
+        self.set_child_log_level(level)
 
     @register_function()
     def set_internal_log_enabled(self, enabled):
         self.internal_log_enabled = enabled
+        self.set_child_log_enabled(enabled)
 
     @register_function()
     def set_child_log_level(self, level):
