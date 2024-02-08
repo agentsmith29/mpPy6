@@ -123,7 +123,7 @@ class CProcess(CBase, Process):
         result.set_additional_info(tb_join)
         self.state_queue.put(result)
 
-    @staticmethod
+    #@staticmethod
     def register_signal(postfix=None, signal_name: str = None):
         _postfix = postfix.strip() if postfix is not None else None
         _signal_name = signal_name.strip() if signal_name is not None else None

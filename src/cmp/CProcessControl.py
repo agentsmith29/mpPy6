@@ -145,7 +145,7 @@ class CProcessControl(CBase, QObject):
     def execute_function(self, func: callable, signal: Signal = None):
         self.register_function(signal)(func)(self)
 
-    @staticmethod
+    #@staticmethod
     def register_function(signal: Signal = None):
         """
         Decorator for registering functions in the command queue.

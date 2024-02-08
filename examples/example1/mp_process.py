@@ -1,6 +1,9 @@
+import sys
+
 from PySide6.QtCore import Signal
 
 import cmp
+
 
 
 class ChildProcess(cmp.CProcess):

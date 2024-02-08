@@ -5,7 +5,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QDialog, QApplication, QPushButton, QMessageBox, QVBoxLayout
 from rich.logging import RichHandler
 
-sys.path.append('./src')
+sys.path.append('../../src')
 from mp_process import ChildProcessControl
 
 
