@@ -15,8 +15,6 @@ from cmp.CBase import CBase
 
 class CProcess(CBase, Process):
 
-
-
     def __init__(self, state_queue: Queue, cmd_queue: Queue,
                  kill_flag,
                  internal_log, internal_log_level, log_file=None,
@@ -66,11 +64,10 @@ class CProcess(CBase, Process):
                                              logger_handler=logging.handlers.QueueHandler(self.state_queue),
                                              enabled=True)
 
-
         self._module_logger.debug(f"Child process {self.__class__.__name__} started.")
 
-        #sys.stderr.write = self.logger.error
-        #sys.stdout.write = self.logger.info
+        # sys.stderr.write = self.logger.error
+        # sys.stdout.write = self.logger.info
 
         self.postrun_init()
 
@@ -106,7 +103,7 @@ class CProcess(CBase, Process):
         self._module_logger.warning(f"Child process monitor {self.__class__.__name__} ended.")
 
     def __del__(self):
-        #self.logger.warning(f"Child process {self.name} deleted.")
+        # self.logger.warning(f"Child process {self.name} deleted.")
         self.cmd_queue.close()
         self.state_queue.close()
 
@@ -125,8 +122,6 @@ class CProcess(CBase, Process):
         result = cmp.CException(self.name, func_name, exc, )
         result.set_additional_info(tb_join)
         self.state_queue.put(result)
-
-
 
     @staticmethod
     def register_signal(postfix=None, signal_name: str = None):
@@ -156,7 +151,6 @@ class CProcess(CBase, Process):
                     self._module_logger.error(f"Error in function {func_name}: {e} ({type(e)})")
                     self._put_exception_to_queue(func.__name__, e)
                     return None
-
 
             return get_signature
 

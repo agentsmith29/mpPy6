@@ -4,7 +4,7 @@ version = "1.0.0"
 authors = [
   { name="Christoph Schmidt", email="cschmidt.fs@gmail.com" },
 ]
-description = "A Pyside-to-Process Control lass"
+description = "A Pyside-to-Process Control class"
 readme = "README.md"
 requires-python = ">=3.7"
 dependencies = [
@@ -17,4 +17,4 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://gitlab.tugraz.at/flexsensor-public/---"
+"Homepage" = "https://github.com/agentsmith29/fstools.confighandler"
