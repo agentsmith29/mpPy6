@@ -1,72 +1,52 @@
-# -*- coding: utf-8 -*-
-"""
-Author(s): Christoph Schmidt <christoph.schmidt@tugraz.at>
-Created: 2023-10-19 12:35
-Package Version: 
-"""
-import signal
+import logging
 import sys
-from multiprocessing import Process, Queue, Pipe
-from threading import Thread
 
-from PySide6.QtCore import QObject, Signal, SIGNAL
-from PySide6.QtWidgets import QDialog, QApplication, QTextBrowser, QLineEdit, QVBoxLayout, QMainWindow, QMessageBox
+from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QDialog, QApplication, QPushButton, QMessageBox, QVBoxLayout
+from rich.logging import RichHandler
 
-from mp_process import ChildProc, ChildControl
+sys.path.append('./src')
+from mp_process import ChildProcessControl
 
 
 class Form(QDialog):
-
     on_text_converted = Signal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        child_con = ChildControl(self, internal_logging=True)
+        child_con = ChildProcessControl(self)
+        child_con.internal_log_enabled = True
+        child_con.internal_log_level = logging.INFO
 
-        child_con.call_without_mp_finished.connect(self.updateUI)
-        child_con.call_without_mp2_changed.connect(self.updateUI2)
-
-
-        self.browser = QTextBrowser()
-        self.lineedit = QLineEdit('Type text and press <Enter>')
-        self.lineedit.selectAll()
+        self.btn_start = QPushButton("Start")
+        self.btn_start.clicked.connect(lambda: child_con.add_two(1, 2))
+        # add the button to the layout
         layout = QVBoxLayout()
-        layout.addWidget(self.browser)
-        layout.addWidget(self.lineedit)
+        layout.addWidget(self.btn_start)
         self.setLayout(layout)
-        self.lineedit.setFocus()
-        self.setWindowTitle('Upper')
-        #self.lineedit.returnPressed.connect(lambda: child_con.call_without_mp(1, 2, c=3))
-        self.lineedit.returnPressed.connect(lambda: child_con.call_all())
 
-        #self.emitter.register(self.on_text_converted, self.updateUI)
+        # Connect the signal to the slot
+        child_con.add_two_finished.connect(self.two_numbers_added)
 
-    def test(self):
-        #Signal(str)
-        self.data_to_child.put(self.to_child.__name__)
-        #self.lineedit.clear()
+    def two_numbers_added(self, result):
+        # Message box
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText(f"The result is {result}")
+        msg.setWindowTitle("Result")
+        msg.exec()
 
-
-    def updateUI(self, text):
-        print("updateUI: ", text)
-        self.browser.append(str(text))
-
-    def updateUI2(self, text, text2, text3):
-        print("updateUI2: ", text)
-        self.browser.append("->" + str(text) + "+" + str(text2) + "=" + str(text3))
-
-    def closeEvent(self, event):
-        print("closeEvent")
-        #try:
+    def closeEvent(self, arg__1):
         self.destroyed.emit()
-        #except KeyboardInterrupt:
-        #    print("KeyboardInterrupt")
-        #event.ignore()
-
 
 
 if __name__ == '__main__':
+    # Set up logging
+    FORMAT = "%(name)s %(message)s"
+    logging.basicConfig(
+        level=logging.DEBUG, format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
+    )
 
     try:
         app = QApplication(sys.argv)
@@ -75,5 +55,4 @@ if __name__ == '__main__':
         app.exec()
     except KeyboardInterrupt:
         print("KeyboardInterrupt")
-        sys.exit(0)
-
+        sys.exit(0)  # print(f"{os.getpid()} -> call_without_mp with {a}, {b}, {c}!")

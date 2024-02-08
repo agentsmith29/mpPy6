@@ -1,66 +1,34 @@
-# -*- coding: utf-8 -*-
-"""
-Author(s): Christoph Schmidt <christoph.schmidt@tugraz.at>
-Created: 2023-10-19 12:35
-Package Version: 
-"""
-import os
-import sys
-import time
-
 from PySide6.QtCore import Signal
 
-sys.path.append('./src')
 import cmp
 
 
-class Sceleton:
+class ChildProcess(cmp.CProcess):
 
-    def call_without_mp(self, a, b, c=None, **kwargs):
-        raise NotImplementedError()
+    def __init__(self, state_queue, cmd_queue, kill_flag, *args, **kwargs):
+        super().__init__(state_queue, cmd_queue, kill_flag, *args, **kwargs)
 
-
-class ChildProc(cmp.CProcess, Sceleton):
-
-    def __init__(self, state_queue, cmd_queue, enable_interal_logging):
-        super().__init__(state_queue, cmd_queue, enable_interal_logging=enable_interal_logging)
-
-    @cmp.CProcess.register_signal()
-    def call_without_mp(self, a, b, c=None, **kwargs):
-        print(f"{os.getpid()} -> call_without_mp with {a}, {b}, {c} and {kwargs}!")
-        time.sleep(1)
-        return c
-
-    @cmp.CProcess.register_signal('_changed')
-    def call_without_mp2(self, a, b, c=None, **kwargs):
-        print(f"{os.getpid()} -> call_without_mp2 with {a}, {b}, {c} and {kwargs}!")
-        time.sleep(1)
-        return b, c, b+c
-
-    #@CProccess.register_function
-    def call_all(self, *args, **kwargs):
-       self.call_without_mp(1, 2, c=3)
-       self.call_without_mp2(4, 7, c=5)
+    # The signal (add_two_finished) name mus correspond to the signal in the control class "ChildProcessControl"
+    # in order to get executed.
+    # The function (add_two) and function's signature name must correspond to the function in the control class
+    @cmp.CProcess.register_signal(signal_name='add_two_finished')
+    def add_two(self, num1: int, num2: int):
+        # "return" automatically sends the result to the control class and triggers the signal with the
+        # name "add_two_finished"
+        return num1 + num2
 
 
-class ChildControl(cmp.CProcessControl, Sceleton):
-    call_without_mp_finished = Signal(int)
-    call_without_mp2_changed = Signal(int, int, int)
 
-    def __init__(self, parent, internal_logging):
-        super().__init__(parent, internal_logging=internal_logging)
-        self.register_child_process(ChildProc(self.state_queue, self.cmd_queue, enable_interal_logging=internal_logging))
+class ChildProcessControl(cmp.CProcessControl):
+    add_two_finished = Signal(int, name='test_call_finished')
 
+    def __init__(self, parent, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        # Register the child process
+        self.register_child_process(ChildProcess)
+
+    # Create a body for your function. This does not necessarily have to include code, you can just print a message
+    # or add "pass", a comment, or a docstring.
     @cmp.CProcessControl.register_function()
-    def call_without_mp(self, a, b, c=None):
-        pass
-        #print(f"{os.getpid()} -> call_without_mp with {a}, {b}, {c}!")
-
-    @cmp.CProcessControl.register_function()
-    def call_without_mp2(self, a, b, c=None, **kwargs):
-      pass
-
-    @cmp.CProcessControl.register_function()
-    def call_all(self):
-       pass
-       #print(f"{os.getpid()} -> Executing call_all in Control Class.")
+    def add_two(self, num1: int, num2: int):
+        print("I will add two numbers in a separate process")
