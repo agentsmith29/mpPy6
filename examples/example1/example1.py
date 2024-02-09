@@ -5,7 +5,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QDialog, QApplication, QPushButton, QMessageBox, QVBoxLayout
 from rich.logging import RichHandler
 
-sys.path.append('../../src')
+sys.path.append('././src')
 from mp_process import ChildProcessControl
 
 
@@ -48,6 +48,8 @@ if __name__ == '__main__':
         level=logging.DEBUG, format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
     )
 
+    # Print the Python version and the file name
+    print(f"Executing {__file__} with Python {sys.version}")
     try:
         app = QApplication(sys.argv)
         form = Form()
