@@ -1,4 +1,4 @@
-import cmp
+import mpPy6
 
 
 class _Cache(object):
@@ -61,11 +61,11 @@ class CProperty:
             raise AttributeError("unreadable attribute")
         return self.fget(obj)
 
-    def __set__(self, obj: cmp.CProcess, value):
+    def __set__(self, obj: mpPy6.CProcess, value):
         if self.fset is None:
             raise AttributeError("can't set attribute")
         obj._module_logger.debug(f"Setting {self.signal_name}!")
-        result = cmp.CResultRecord(str(self.fset.__name__), self.signal_name, value)
+        result = mpPy6.CResultRecord(str(self.fset.__name__), self.signal_name, value)
         obj.state_queue.put(result)
 
         self.fset(obj, value)

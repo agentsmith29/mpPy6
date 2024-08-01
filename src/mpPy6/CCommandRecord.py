@@ -1,4 +1,4 @@
-from cmp import CProcess as CProcess
+from mpPy6 import CProcess as CProcess
 
 
 class CCommandRecord:

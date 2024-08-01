@@ -1,18 +1,18 @@
 import os
 import time
 
-import cmp
-from cmp.CProperty import CProperty, Cache
+import mpPy6
+from mpPy6.CProperty import CProperty, Cache
 
 
-class ChildProcess3(cmp.CProcess):
+class ChildProcess3(mpPy6.CProcess):
 
     def __init__(self, state_queue, cmd_queue, kill_flag,*args, **kwargs):
         super().__init__(state_queue, cmd_queue, kill_flag, *args, **kwargs)
         self.logger = None
 
 
-    @cmp.CProcess.register_signal()
+    @mpPy6.CProcess.register_signal()
     def test_call(self, a):
         self.logger.info(f"{os.getpid()} -> test_call!")
         self.logger.debug(f"{os.getpid()} -> test_call2!")
@@ -28,6 +28,6 @@ class ChildProcess3(cmp.CProcess):
     def test_call2(self, value: int):
         self.my_value = value
 
-    @cmp.CProcess.register_signal()
+    @mpPy6.CProcess.register_signal()
     def exception_call(self, value: int):
         return value/0

@@ -1,7 +1,7 @@
 import os
 import time
 
-import cmp
+import mpPy6
 
 
 class ChildProcess2(cmp.CProcess):
@@ -14,13 +14,13 @@ class ChildProcess2(cmp.CProcess):
 
     def postrun_init(self):
         self.logger, self.logger_h = self.create_new_logger(f"{self.__class__.__name__}-({os.getpid()})")
-    @cmp.CProcess.register_signal()
+    @mpPy6.CProcess.register_signal()
     def call_without_mp(self, a, b, c=None, **kwargs):
         self.logger.info(f"{os.getpid()} -> call_without_mp with {a}, {b}, {c} and {kwargs}!")
         time.sleep(1)
         return c
 
-    @cmp.CProcess.register_signal('_changed')
+    @mpPy6.CProcess.register_signal('_changed')
     def call_without_mp2(self, a, b, c=None, **kwargs):
         print(f"{os.getpid()} -> call_without_mp2 with {a}, {b}, {c} and {kwargs}!")
         time.sleep(1)

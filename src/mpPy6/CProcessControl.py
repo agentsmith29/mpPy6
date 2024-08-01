@@ -10,8 +10,11 @@ from PySide6.QtCore import QObject, QThreadPool, Signal
 from PySide6.QtGui import QWindow
 from PySide6.QtWidgets import QWidget, QMessageBox
 
-import cmp
-from cmp.CBase import CBase
+import mpPy6
+from mpPy6.CBase import CBase
+from mpPy6.CProcess import CProcess
+from mpPy6.CResultRecord import CResultRecord
+from mpPy6.CException import CException
 
 
 class CProcessControl(CBase, QObject):
@@ -40,7 +43,7 @@ class CProcessControl(CBase, QObject):
             self.register_signal_class(self)
 
         # The child process
-        self._child: cmp.CProcess = None
+        self._child: CProcess = None
 
         # Queues for data exchange
         self.cmd_queue = Queue()
@@ -104,12 +107,12 @@ class CProcessControl(CBase, QObject):
                         self.logger.handle(res)
                     except Exception as e:
                         self.logger.warning(f"Error cannot handle log record: {e}")
-                elif isinstance(res, cmp.CResultRecord):
+                elif isinstance(res, CResultRecord):
                     try:
                         res.emit_signal(self._signal_class)
                     except Exception as e:
                         self._module_logger.error(f"Error while emitting {res} in {self.__class__.__name__}: {e}")
-                elif isinstance(res, cmp.CException):
+                elif isinstance(res, CException):
                     self._module_logger.error(f"Received exception: {res}")
                     try:
                         self.on_exception_raised.emit(res)
@@ -118,15 +121,15 @@ class CProcessControl(CBase, QObject):
                 else:
                     self._module_logger.error(f"Received unknown result {res}!")
 
-        except:
-            self._module_logger.error(f"Error in monitor thread")
+        except Exception as e:
+            self._module_logger.error(f"Error in monitor thread: {e}")
             time.sleep(1)
 
         self._module_logger.info(f"Ended monitor thread. Child process alive: {self._child.is_alive()}")
         self.state_queue.close()
         self.cmd_queue.close()
 
-    def display_exception(self, e: cmp.CException):
+    def display_exception(self, e: mpPy6.CException):
         # Create a message box
         try:
             self.msg_box = QMessageBox()
@@ -172,7 +175,7 @@ class CProcessControl(CBase, QObject):
                 args = arguments.pop("args")
                 kwargs = arguments.pop("kwargs")
 
-                cmd = cmp.CCommandRecord(self._child.name, name, *args, **kwargs)
+                cmd = mpPy6.CCommandRecord(self._child.name, name, *args, **kwargs)
                 if signal is not None:
                     sig_name, sig_args = match_signal_name(signal)
                     cmd.register_signal(sig_name)

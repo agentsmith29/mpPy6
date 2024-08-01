@@ -1,10 +1,10 @@
 from PySide6.QtCore import Signal
 
-import cmp
+import mpPy6
 from ChildProcess2 import ChildProcess2
 
 
-class ChildProcessControl2(cmp.CProcessControl):
+class ChildProcessControl2(mpPy6.CProcessControl):
     call_without_mp_finished = Signal(int)
     #call_without_mp2_changed = Signal(int, int, int)
 
@@ -13,7 +13,7 @@ class ChildProcessControl2(cmp.CProcessControl):
                          internal_logging=internal_logging, internal_logging_level=internal_logging_level)
         self.register_child_process(ChildProcess2)
 
-    @cmp.CProcessControl.register_function()
+    @mpPy6.CProcessControl.register_function()
     def call_without_mp(self, a, b, c=None):
         pass
         #print(f"{os.getpid()} -> call_without_mp with {a}, {b}, {c}!")

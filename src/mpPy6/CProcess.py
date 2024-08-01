@@ -6,8 +6,8 @@ import time
 import traceback
 from multiprocessing import Process, Queue
 
-import cmp
-from cmp.CBase import CBase
+import mpPy6
+from mpPy6.CBase import CBase
 
 
 # This is a Queue that behaves like stdout
@@ -39,6 +39,9 @@ class CProcess(CBase, Process):
             Dummy function  for initializing e.g. loggers (some handlers are not pickable)
             or pther non-pickable objects
         """
+        pass
+
+    def cleanup(self):
         pass
 
     def _typecheck(self):
@@ -79,7 +82,7 @@ class CProcess(CBase, Process):
                 except:
                     continue
 
-                if isinstance(cmd, cmp.CCommandRecord):
+                if isinstance(cmd, mpPy6.CCommandRecord):
                     self._module_logger.debug(
                         f"Received cmd: {cmd}, args: {cmd.args}, kwargs: {cmd.kwargs}, Signal to emit: {cmd.signal_name}")
                     try:
@@ -103,6 +106,7 @@ class CProcess(CBase, Process):
         self._module_logger.warning(f"Child process monitor {self.__class__.__name__} ended.")
 
     def __del__(self):
+        self.cleanup()
         # self.logger.warning(f"Child process {self.name} deleted.")
         self.cmd_queue.close()
         self.state_queue.close()
@@ -112,14 +116,14 @@ class CProcess(CBase, Process):
             self._module_logger.debug(f"{func_name} finished. Emitting signal {signal_name} in control class.")
         else:
             self._module_logger.debug(f"{func_name} finished. No signal to emit.")
-        result = cmp.CResultRecord(func_name, signal_name, res)
+        result = mpPy6.CResultRecord(func_name, signal_name, res)
         self.state_queue.put(result)
 
     def _put_exception_to_queue(self, func_name, exc):
         self._module_logger.debug(f"Error executing {func_name}.")
         tb_str = traceback.format_exception(type(exc), value=exc, tb=exc.__traceback__)
         tb_join = "".join(tb_str[-2:len(tb_str)])
-        result = cmp.CException(self.name, func_name, exc, )
+        result = mpPy6.CException(self.name, func_name, exc, )
         result.set_additional_info(tb_join)
         self.state_queue.put(result)
 

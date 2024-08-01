@@ -1,6 +1,6 @@
 import logging
 
-from cmp import CProcessControl as CProcessControl
+from mpPy6 import CProcessControl as CProcessControl
 
 
 class CResultRecord:
