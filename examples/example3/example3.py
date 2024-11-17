@@ -14,7 +14,12 @@ from PySide6.QtCore import QObject, Signal, SIGNAL
 from PySide6.QtWidgets import QDialog, QApplication, QTextBrowser, QLineEdit, QVBoxLayout, QMainWindow, QMessageBox
 from rich.logging import RichHandler
 
-sys.path.append('./src')
+import os
+
+file_path, _ = os.path.split(os.path.realpath(__file__))
+src_path = f"{file_path}/../../src"
+print("src_path:", src_path)
+
 from ChildProcessControl3 import ChildProcessControl3
 
 

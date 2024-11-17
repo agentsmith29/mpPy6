@@ -1,6 +1,9 @@
 from PySide6.QtCore import Signal
 
-import cmp
+import sys
+sys.path.append('../../src')
+import mpPy6 as cmp
+
 from ChildProcess4 import ChildProcess4
 from ExampleModel4 import ExampleModel4
 

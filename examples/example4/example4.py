@@ -4,6 +4,12 @@ Author(s): Christoph Schmidt <christoph.schmidt@tugraz.at>
 Created: 2023-10-19 12:35
 Package Version:
 """
+import os
+
+file_path, _ = os.path.split(os.path.realpath(__file__))
+src_path = f"{file_path}/../../src"
+print("src_path:", src_path)
+
 import logging
 import signal
 import sys
@@ -13,9 +19,6 @@ from threading import Thread
 from PySide6.QtCore import QObject, Signal, SIGNAL
 from PySide6.QtWidgets import QDialog, QApplication, QTextBrowser, QLineEdit, QVBoxLayout, QMainWindow, QMessageBox
 
-
-
-sys.path.append('./src')
 from ChildProcessControl4 import ChildProcessControl4
 from ExampleModel4 import ExampleModel4
 

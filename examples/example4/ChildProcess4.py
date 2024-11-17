@@ -1,8 +1,11 @@
 import os
 import time
 
-import cmp
-from cmp.CProperty import CProperty, Cache
+import sys
+sys.path.append('../../src')
+import mpPy6 as cmp
+
+from mpPy6.CProperty import CProperty, Cache
 from ExampleModel4 import ExampleModel4
 
 

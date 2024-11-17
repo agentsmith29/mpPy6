@@ -1,8 +1,11 @@
 import logging
 
 from PySide6.QtCore import Signal
+import os
+import sys
+sys.path.append('../../src')
+import mpPy6 as cmp
 
-import cmp
 from ChildProcess3 import ChildProcess3
 
 

@@ -1,6 +1,11 @@
 from PySide6.QtCore import Signal, QObject
+import os
 
-from cmp.CProperty import CProperty
+file_path, _ = os.path.split(os.path.realpath(__file__))
+src_path = f"{file_path}/../../src"
+print("src_path:", src_path)
+
+from mpPy6.CProperty import CProperty
 from CModel import CModel
 
 
